@@ -84,6 +84,13 @@ public class LoanReAgingIntegrationTest extends BaseLoanIntegrationTest {
             createdLoanId.set(loanId);
         });
 
+        // [추가] 1월 15일에 250원을 상환하여 잔액을 1000원으로 만듭니다.
+        runAt("15 January 2023", () -> {
+            long loanId = createdLoanId.get();
+            loanTransactionHelper.makeRepayment("15 January 2023", 250.0f, (int) loanId);
+        });
+
+
         runAt("02 February 2023", () -> {
             long loanId = createdLoanId.get();
 
@@ -93,7 +100,10 @@ public class LoanReAgingIntegrationTest extends BaseLoanIntegrationTest {
             // verify transactions
             verifyTransactions(loanId, //
                     transaction(1250.0, "Disbursement", "01 January 2023"), //
-                    transaction(1250.0, "Re-age", "02 February 2023") //
+                    transaction(250.0, "Repayment", "15 January 2023"), // [추가] 상환 기록 확인
+                    //transaction(1250.0, "Re-age", "02 February 2023") //
+                    transaction(1000.0, "Re-age", "02 February 2023")  // [수정] 1250.0을 1000.0으로 변경
+
             );
 
             // TODO: verify installments when schedule generation is implemented

@@ -143,7 +143,7 @@ public class LoanReAgingServiceImpl {
                 .orElse(null);
     }
 
-    private LoanTransaction createReAgeTransaction(Loan loan, JsonCommand command) {
+    /*private LoanTransaction createReAgeTransaction(Loan loan, JsonCommand command) {
         ExternalId txExternalId = externalIdFactory.createFromCommand(command, LoanReAgingApiConstants.externalIdParameterName);
 
         // reaging transaction date is always the current business date
@@ -155,5 +155,24 @@ public class LoanReAgingServiceImpl {
 
         return new LoanTransaction(loan, loan.getOffice(), LoanTransactionType.REAGE.getValue(), transactionDate, txPrincipalAmount,
                 txPrincipalAmount, ZERO, ZERO, ZERO, null, false, null, txExternalId);
+    }*/
+
+    private LoanTransaction createReAgeTransaction(Loan loan, JsonCommand command) {
+        ExternalId txExternalId = externalIdFactory.createFromCommand(command, LoanReAgingApiConstants.externalIdParameterName);
+        LocalDate transactionDate = DateUtils.getBusinessLocalDate();
+
+        // [FINERACT-1971 버그 상황 완벽 재현]
+        // getLoanSummary()는 Loan.java에 정의된 Getter입니다.
+        // getTotalPrincipal()은 상환액과 상관없이 '최초 대출 총액'을 가져오는 메서드입니다.
+        BigDecimal txPrincipalAmount = loan.getApprovedPrincipal();
+
+        return new LoanTransaction(loan, loan.getOffice(), LoanTransactionType.REAGE.getValue(), transactionDate, txPrincipalAmount,
+                txPrincipalAmount, ZERO, ZERO, ZERO, null, false, null, txExternalId);
     }
+
+
+
+
+
+
 }
