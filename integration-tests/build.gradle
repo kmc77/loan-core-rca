@@ -34,6 +34,7 @@ configurations {
     driver
 }
 dependencies {
+    testImplementation 'junit:junit:4.13.1'
     driver 'mysql:mysql-connector-java:8.0.33'
 }
 
