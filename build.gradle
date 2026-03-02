@@ -56,6 +56,7 @@ buildscript {
         npmRepository = 'https://npm.pkg.github.com'
     }
     repositories {
+        mavenCentral()
         maven { url 'https://plugins.gradle.org/m2/' }
     }
 
@@ -70,6 +71,15 @@ buildscript {
     }
 }
 
+
+// Workaround: com.burgstaller:okhttp-digest:1.10 is no longer resolvable.
+buildscript {
+    configurations.classpath {
+        resolutionStrategy.dependencySubstitution {
+            substitute module("com.burgstaller:okhttp-digest") using module("io.github.rburgst:okhttp-digest:2.5")
+        }
+    }
+}
 plugins {
     id 'me.qoomon.git-versioning' version '6.4.3'
     id "org.barfuin.gradle.taskinfo" version "2.2.0"
