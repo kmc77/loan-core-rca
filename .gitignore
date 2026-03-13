@@ -30,3 +30,7 @@ fineract-client/out/
 fineract-provider/src/main/generated/
 integration-tests/out/
 module/dummy/starter/out/
+
+# Build output directories
+out/
+src/main/generated/
