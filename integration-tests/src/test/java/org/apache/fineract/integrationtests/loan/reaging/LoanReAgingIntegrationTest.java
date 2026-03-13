@@ -27,7 +27,6 @@ import org.apache.fineract.client.models.PostLoansRequest;
 import org.apache.fineract.client.models.PostLoansResponse;
 import org.apache.fineract.integrationtests.BaseLoanIntegrationTest;
 import org.apache.fineract.integrationtests.common.ClientHelper;
-import org.junit.Test;
 import org.junit.jupiter.api.Test;
 
 public class LoanReAgingIntegrationTest extends BaseLoanIntegrationTest {
