@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loan Re-aging — FINERACT-2384 재현 &amp; RCA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --paper:#f7f4ed;
+    --paper-2:#efebe0;
+    --ink:#1c1a17;
+    --ink-soft:#544f47;
+    --rule:#d8d2c4;
+    --crimson:#9a2515;
+    --crimson-soft:#c4583f;
+    --verified:#2f5d3a;
+    --code-bg:#1f1d1a;
+    --code-fg:#e9e4d6;
+    --code-dim:#8f897a;
+    --accent-line:#9a2515;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Pretendard","Newsreader",system-ui,sans-serif;
+    font-size:17px;
+    line-height:1.72;
+    letter-spacing:-0.003em;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:830px;margin:0 auto;padding:84px 30px 140px}
+
+  /* ---- masthead ---- */
+  .mast{border-bottom:3px solid var(--ink);padding-bottom:26px;margin-bottom:14px}
+  .kicker{
+    font-family:"JetBrains Mono",monospace;
+    font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--crimson);font-weight:700;margin-bottom:20px;
+  }
+  h1{
+    font-family:"Newsreader",serif;
+    font-weight:600;font-size:clamp(34px,5.4vw,52px);
+    line-height:1.08;letter-spacing:-0.02em;
+    margin-bottom:18px;
+  }
+  h1 em{font-style:italic;color:var(--crimson)}
+  .standfirst{
+    font-family:"Newsreader",serif;
+    font-size:20px;line-height:1.55;color:var(--ink-soft);
+    max-width:62ch;
+  }
+  .meta{
+    display:flex;flex-wrap:wrap;gap:8px 26px;
+    margin-top:26px;font-family:"JetBrains Mono",monospace;
+    font-size:12.5px;color:var(--ink-soft);letter-spacing:.01em;
+  }
+  .meta b{color:var(--ink);font-weight:700}
+
+  /* ---- sections ---- */
+  section{margin-top:58px}
+  .sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:22px}
+  .sec-num{
+    font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:700;
+    color:var(--crimson);letter-spacing:.06em;flex:none;padding-top:6px;
+  }
+  h2{
+    font-family:"Newsreader",serif;font-weight:600;
+    font-size:clamp(23px,3.4vw,30px);line-height:1.2;letter-spacing:-0.015em;
+    border-bottom:1px solid var(--rule);padding-bottom:12px;flex:1;
+  }
+  h3{
+    font-family:"Pretendard",sans-serif;font-weight:700;
+    font-size:16px;margin:30px 0 10px;letter-spacing:-0.01em;
+  }
+  p{margin:14px 0;max-width:70ch}
+  p.lead{font-size:18px}
+  strong{font-weight:700}
+  .ink-soft{color:var(--ink-soft)}
+
+  /* ---- callouts ---- */
+  .note{
+    border-left:3px solid var(--accent-line);
+    background:var(--paper-2);
+    padding:18px 22px;margin:24px 0;border-radius:0 4px 4px 0;
+  }
+  .note .tag{
+    font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--crimson);
+    display:block;margin-bottom:8px;
+  }
+  .note.ok{border-left-color:var(--verified)}
+  .note.ok .tag{color:var(--verified)}
+  .note p{margin:6px 0}
+  .note p:first-of-type{margin-top:0}
+
+  /* ---- list ---- */
+  ul,ol{margin:14px 0 14px 4px;padding-left:22px;max-width:70ch}
+  li{margin:8px 0;padding-left:4px}
+  li::marker{color:var(--crimson)}
+
+  /* ---- code ---- */
+  code{
+    font-family:"JetBrains Mono",monospace;font-size:.82em;
+    background:var(--paper-2);padding:.12em .42em;border-radius:3px;
+    color:var(--crimson);font-weight:500;
+  }
+  pre{
+    background:var(--code-bg);color:var(--code-fg);
+    font-family:"JetBrains Mono",monospace;font-size:13.5px;line-height:1.68;
+    padding:22px 24px;border-radius:8px;margin:20px 0;overflow-x:auto;
+    box-shadow:0 14px 34px -22px rgba(31,29,26,.55);
+  }
+  pre code{background:none;padding:0;color:inherit;font-weight:400;font-size:1em}
+  pre .c{color:var(--code-dim);font-style:italic}
+  pre .bug{color:#e89a86;font-weight:700}
+  pre .fix{color:#9fd6ab}
+  pre .kw{color:#d8b46a}
+
+  /* ---- timeline ---- */
+  .tl{margin:22px 0;border-top:1px solid var(--rule)}
+  .tl-row{
+    display:grid;grid-template-columns:108px 1fr;gap:18px;
+    padding:14px 0;border-bottom:1px solid var(--rule);align-items:start;
+  }
+  .tl-row .hash{font-family:"JetBrains Mono",monospace;font-size:12.5px;color:var(--crimson);font-weight:700}
+  .tl-row .body{font-size:15px}
+  .tl-row .who{
+    font-family:"JetBrains Mono",monospace;font-size:11px;
+    color:var(--ink-soft);display:block;margin-top:3px;letter-spacing:.04em;
+  }
+  .tl-row.mine{background:linear-gradient(90deg,rgba(154,37,21,.06),transparent)}
+
+  /* ---- table-ish steps ---- */
+  .steps{margin:18px 0;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+  .steps div{
+    display:grid;grid-template-columns:34px 1fr 130px;gap:14px;
+    padding:11px 18px;font-size:14.5px;border-bottom:1px solid var(--rule);align-items:center;
+  }
+  .steps div:last-child{border-bottom:none}
+  .steps .h{background:var(--ink);color:var(--paper);font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+  .steps .n{font-family:"JetBrains Mono",monospace;color:var(--crimson);font-weight:700}
+  .steps .amt{font-family:"JetBrains Mono",monospace;text-align:right;color:var(--ink-soft)}
+
+  footer{
+    margin-top:72px;padding-top:26px;border-top:3px solid var(--ink);
+    font-size:14px;color:var(--ink-soft);
+  }
+  footer code{font-size:.8em}
+  footer a{color:var(--crimson);text-decoration:none;border-bottom:1px solid var(--crimson-soft)}
+  .src{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-soft);margin-top:10px}
+  .src a{color:var(--crimson);text-decoration:none;border-bottom:1px dotted var(--crimson-soft)}
+
+  @media (max-width:620px){
+    body{font-size:16px}
+    .wrap{padding:54px 20px 100px}
+    .sec-head{flex-direction:column;gap:6px}
+    .sec-num{padding-top:0}
+    .tl-row,.steps div{grid-template-columns:1fr;gap:6px}
+    .steps .amt{text-align:left}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast">
+    <div class="kicker">Apache Fineract · Root Cause Analysis</div>
+    <h1>Loan Re-aging의 <em>실재했던</em> 결함 재현과 RCA</h1>
+    <p class="standfirst">Apache Fineract 1.10–1.12에 실제로 출시됐던 re-age 결함(<strong>FINERACT-2384</strong>)을, 해당 결함이 그대로 들어있는 base 버전에서 재현하고 1.13.0의 공식 수정 전략으로 해소하는 과정을 기록한다.</p>
+    <div class="meta">
+      <span><b>티켓</b> FINERACT-2384 (Bug)</span>
+      <span><b>영향 버전</b> 1.10.1 / 1.11.0 / 1.12.1</span>
+      <span><b>수정</b> 1.13.0</span>
+      <span><b>기반</b> apache/fineract fork</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">00</span><h2>정정 고지</h2></div>
+    <p class="lead">이 저장소의 초기 서술은 사실이 아니었다. 명확히 바로잡는다.</p>
+    <div class="note">
+      <span class="tag">철회된 주장</span>
+      <p>초기 README는 “Re-aging이 승인원금을 참조하는 버그를 발견·수정했다”고 주장했다. <strong>그런 버그는 Fineract에 존재한 적이 없다.</strong> <code>FINERACT-1971</code>은 버그 티켓이 아니라 re-aging 최초 구현 기능 티켓이고, 그 코드는 base 커밋부터 잔여원금 기준으로 정상 동작한다. 해당 “버그”는 본 저장소가 임의로 주입했다가 원복한 합성 시나리오였다.</p>
+    </div>
+    <p>아래는 그 가짜 서사를 폐기하고, <strong>실제로 출시됐던 결함을 그대로 재현</strong>하는 것으로 프로젝트를 재정의한 것이다. 정직성 확보가 신뢰의 전제다.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>실제 결함: FINERACT-2384</h2></div>
+    <p>Apache JIRA에서 확인된 실제 Bug 티켓이다. Reporter/Assignee는 Fineract 리드(Adam Saghy), 영향 버전 1.10.1 / 1.11.0 / 1.12.1, 수정 버전 1.13.0.</p>
+    <h3>결함 내용</h3>
+    <ul>
+      <li><strong>트랜잭션 날짜 오류:</strong> re-age 트랜잭션 날짜를 항상 “현재 영업일”로 고정한다. 올바른 동작은 — re-age 시작일이 현재 영업일보다 이르면 트랜잭션 날짜는 <em>re-age 시작일</em>, 그렇지 않으면 현재 영업일.</li>
+      <li><strong>만기일 엣지케이스:</strong> re-age 시작일이 대출 만기일과 동일하면, 시작일·만료일이 모두 만기일이고 일수가 0인 잘못된 신규 회차가 스케줄에 생성된다.</li>
+    </ul>
+    <p class="src">출처: Apache JIRA — <a href="https://issues.apache.org/jira/browse/FINERACT-2384">issues.apache.org/jira/browse/FINERACT-2384</a> · 관련: FINERACT-2385 (0원 re-age 트랜잭션 금지).</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>이 결함은 이미 base 코드에 있다</h2></div>
+    <p>본 저장소의 base 커밋은 <code>4d4502fbe</code> — <em>FINERACT-1971: Loan re-aging foundational implementation</em>. 이는 2384 수정(1.13.0) <strong>이전</strong>의 버그 버전이다. 따라서 결함을 주입할 필요가 없다. <code>LoanReAgingServiceImpl.createReAgeTransaction(...)</code>에 원본 그대로 존재한다:</p>
+<pre><code><span class="kw">private</span> LoanTransaction createReAgeTransaction(Loan loan, JsonCommand command) {
+    ExternalId txExternalId = externalIdFactory.createFromCommand(command, ...);
+    LocalDate transactionDate = DateUtils.getBusinessLocalDate();  <span class="bug">// ← FINERACT-2384 그 자체</span>
+    ...
+}</code></pre>
+    <div class="note ok">
+      <span class="tag">검증됨</span>
+      <p><code>transactionDate</code>를 무조건 현재 영업일로 하드코딩한 이 한 줄이 곧 2384의 트랜잭션 날짜 결함이다. 본 저장소의 기존 원금 작업(주입/원복)은 이 줄을 건드린 적이 없다 — 진짜 결함은 손대지 않은 원본 그대로 코드에 살아있다.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>재현 시나리오</h2></div>
+    <p>가짜 버전은 <em>금액</em>(1250 vs 1000)을 검증했다. 실제 2384는 <strong>트랜잭션 날짜</strong>와 <strong>스케줄 구조</strong>를 검증한다.</p>
+
+    <h3>시나리오 A — 트랜잭션 날짜 오류</h3>
+    <div class="steps">
+      <div class="h"><span>#</span><span>행위</span><span>값</span></div>
+      <div><span class="n">1</span><span>대출 실행(Disbursement)</span><span class="amt">2023-02-01</span></div>
+      <div><span class="n">2</span><span>영업일을 뒤로 진행</span><span class="amt">→ 2023-06-01</span></div>
+      <div><span class="n">3</span><span>re-age 실행 (start date = 과거)</span><span class="amt">start 2023-02-02</span></div>
+    </div>
+    <ul>
+      <li><strong>기대(정상/2384 수정 후):</strong> re-age 트랜잭션 날짜 = <code>2023-02-02</code> (start date).</li>
+      <li><strong>실제(버그 base):</strong> re-age 트랜잭션 날짜 = <code>2023-06-01</code> (현재 영업일). → 재현.</li>
+    </ul>
+
+    <h3>시나리오 B — 만기일 엣지케이스</h3>
+    <ul>
+      <li>re-age 시작일을 대출 만기일과 동일하게 설정.</li>
+      <li><strong>기대:</strong> 정상 스케줄.</li>
+      <li><strong>실제(버그):</strong> 시작일=만기일·만료일=만기일·일수 0인 쓰레기 회차가 스케줄에 추가됨. → 재현.</li>
+    </ul>
+    <p>통합테스트 단언 포인트는 트랜잭션 객체의 <em>날짜</em> 필드, 그리고 상환 스케줄에 0일짜리 회차가 존재하는지 여부다.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>근본 원인</h2></div>
+    <p>re-age는 “과거 시점부터의 워크아웃 약정”을 표현할 수 있어야 한다. 트랜잭션 날짜를 무조건 처리 시점(현재 영업일)으로 고정하면, 소급 적용된 약정이 원장에 잘못된 일자로 기록되어 연체 계산·스케줄 재산정의 기준 시점이 어긋난다. 만기일 엣지케이스는 경계 조건(시작일 == 만기일)에 대한 가드 부재로, 길이 0인 무의미한 회차를 생성한다. 둘 다 단순 표시 문제가 아니라 <strong>스케줄/원장 정합성 결함</strong>이다.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>실제 수정 전략</h2></div>
+    <p>1.13.0이 채택한 문서화된 전략을 그대로 구현한다.</p>
+<pre><code><span class="kw">LocalDate</span> reAgeStartDate = command.dateValueOfParameterNamed(LoanReAgingApiConstants.startDate);
+<span class="kw">LocalDate</span> businessDate   = DateUtils.getBusinessLocalDate();
+
+<span class="fix">// 시작일이 영업일보다 이르면 시작일, 아니면 영업일</span>
+<span class="kw">LocalDate</span> transactionDate = DateUtils.isBefore(reAgeStartDate, businessDate)
+        ? reAgeStartDate
+        : businessDate;</code></pre>
+    <p>추가로 <code>reAgeStartDate</code>가 만기일과 같을 때 0일 회차가 생성되지 않도록 스케줄 생성부에 가드를 둔다. 정확한 적용 위치는 실제 코드 RCA 과정에서 확정한다 — 그것이 이 프로젝트의 본 목적이다.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>프로젝트 상태와 범위</h2></div>
+    <div class="note ok">
+      <span class="tag">검증 완료</span>
+      <p>FINERACT-2384가 실제 Bug 티켓이며 영향 버전·수정 버전이 확인됨(JIRA). 결함 코드가 본 base 커밋에 원본 그대로 존재함(소스 직접 확인).</p>
+    </div>
+    <div class="note">
+      <span class="tag">진행 예정</span>
+      <p>시나리오 A/B 통합테스트 작성, 버그 base에서 실패 재현, 수정 전략 적용 후 그린 확인. 통합테스트는 실행 환경(DB 등)을 요구하며, 그린 여부는 로컬 재현을 전제로 한다 — 본 문서는 검증되지 않은 “통과”를 단정하지 않는다.</p>
+    </div>
+    <p class="ink-soft">단일 시나리오 연습이다. 본 프로젝트의 가치는 산출물 자체가 아니라 상태 의존 코어뱅킹 결함을 해당 버전에서 결정적으로 재현하고 공식 수정 전략으로 해소하는 RCA 절차의 훈련에 있다.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>커밋 이력 메모</h2></div>
+    <p>기존 저장소에는 폐기된 가짜 서사의 흔적이 남아 있다. 정리 대상이다.</p>
+    <div class="tl">
+      <div class="tl-row mine">
+        <span class="hash">cc37c055b</span>
+        <span class="body">fix: 가짜 원금 로직 원복 <span class="who">본 저장소 — 폐기 대상</span></span>
+      </div>
+      <div class="tl-row mine">
+        <span class="hash">b968deb10</span>
+        <span class="body">test &amp; bug: 가짜 결함 주입 + 테스트 <span class="who">본 저장소 — 폐기 대상</span></span>
+      </div>
+      <div class="tl-row">
+        <span class="hash">5f9845f86</span>
+        <span class="body">FINERACT-1971: loan level event 트리거 <span class="who">Apache 원본</span></span>
+      </div>
+      <div class="tl-row">
+        <span class="hash">4d4502fbe</span>
+        <span class="body">FINERACT-1971: re-aging foundational impl. (base · 2384 결함 포함) <span class="who">Apache 원본</span></span>
+      </div>
+    </div>
+    <p>가짜 원금 작업은 base 상태로 되돌리고, 그 위에서 시나리오 A/B 재현 → 2384 RCA → 공식 수정 순으로 다시 쌓는다. 커밋 메시지는 “주입”이 아니라 “FINERACT-2384 재현/수정”으로 일관되게.</p>
+  </section>
+
+  <footer>
+    <p>본 저장소는 <a href="https://github.com/apache/fineract">Apache Fineract</a>의 fork이며 Apache-2.0 라이선스를 따른다. 원본 소스·라이선스·NOTICE는 상위 프로젝트를 따른다.</p>
+    <p style="margin-top:12px"><code>./gradlew clean bootJar</code> &nbsp;·&nbsp; <code>./gradlew test</code></p>
+  </footer>
+
+</div>
+</body>
+</html>
